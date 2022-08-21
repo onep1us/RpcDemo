@@ -10,6 +10,7 @@ public class Main {
             serverSocket = new ServerSocket();
             serverSocket.bind(new InetSocketAddress(8866));
             Socket socket = new Socket();
+            System.out.println("等待连接");
             while((socket = serverSocket.accept()) != null){
                 ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
