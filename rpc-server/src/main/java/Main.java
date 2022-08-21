@@ -1,5 +1,3 @@
-import com.sun.security.ntlm.Server;
-
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -15,6 +13,7 @@ public class Main {
             while((socket = serverSocket.accept()) != null){
                 ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+                System.out.println("连接成功");
                 String message = (String) objectInputStream.readObject();
                 String response = "hello" + message;
                 objectOutputStream.writeObject(response);
