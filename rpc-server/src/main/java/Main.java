@@ -1,27 +1,10 @@
-import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import server.net.SocketServer;
+import server.register.NacosServiceRegistry;
 
 public class Main {
     public static void main(String[] args) {
-        ServerSocket serverSocket = null;
-        try {
-            serverSocket = new ServerSocket();
-            serverSocket.bind(new InetSocketAddress(8866));
-            Socket socket = new Socket();
-            System.out.println("等待连接");
-            while((socket = serverSocket.accept()) != null){
-                ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-                System.out.println("连接成功");
-                String message = (String) objectInputStream.readObject();
-                String response = "hello" + message;
-                objectOutputStream.writeObject(response);
-                objectOutputStream.flush();
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+        SocketServer socketServer = new SocketServer("127.0.0.1",8000,new NacosServiceRegistry("123.60.148.100:8848"));
+        socketServer.register(new HelloServiceImpl());
+        socketServer.start();
     }
 }

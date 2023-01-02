@@ -17,22 +17,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SocketClient implements RpcClient{
 
     Map<String,Socket> cache = new ConcurrentHashMap<>();
-    String address;
-    int port;
     RpcDiscovery rpcDiscovery;
 
-    public SocketClient(String address, int port,RpcDiscovery rpcDiscovery) {
-        this.address = address;
-        this.port = port;
+    public SocketClient(RpcDiscovery rpcDiscovery) {
         this.rpcDiscovery = rpcDiscovery;
     }
 
     @Override
     public RpcResponse sendRequest(RpcRequest rpcRequest) {
         try {
-            rpcDiscovery.lookupService(rpcRequest.getInterfaceName());
+            InetSocketAddress inetSocketAddress = rpcDiscovery.lookupService(rpcRequest.getInterfaceName());
             Socket socket = new Socket();
-            socket.connect(new InetSocketAddress(address, port));
+            socket.connect(new InetSocketAddress(inetSocketAddress.getHostString(), inetSocketAddress.getPort()));
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             objectOutputStream.writeObject(rpcRequest);
