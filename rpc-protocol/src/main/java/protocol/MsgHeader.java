@@ -1,8 +1,11 @@
 package protocol;
 
+import lombok.Data;
+
 /**
  * @author wanjiahao
  */
+@Data
 public class MsgHeader {
     /**
      * 魔数
