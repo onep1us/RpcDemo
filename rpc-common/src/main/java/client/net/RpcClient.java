@@ -1,7 +1,8 @@
 package client.net;
 
-import common.model.RpcRequest;
-import common.model.RpcResponse;
+import model.RpcRequest;
+import model.RpcResponse;
+import protocol.RpcProtocol;
 
 /**
  * @author wanjiahao
@@ -12,5 +13,5 @@ public interface RpcClient {
      * @param rpcRequest
      * @return RpcResponse
      */
-    RpcResponse sendRequest(RpcRequest rpcRequest);
+    RpcResponse sendRequest(RpcProtocol<RpcRequest> rpcRequest);
 }

@@ -1,6 +1,8 @@
 package client.net;
 
-import common.model.RpcRequest;
+import model.RpcRequest;
+import protocol.*;
+import serialization.SerializationTypeEnum;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -22,11 +24,19 @@ public class ProxyFactory implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        RpcProtocol<RpcRequest> rpcProtocol = new RpcProtocol<>();
+        MsgHeader header = new MsgHeader();
+        header.setMagic(ProtocolConstants.MAGIC);
+        header.setMsgType((byte)MsgTypeEnum.REQUEST.getType());
+        header.setSerialization(SerializationTypeEnum.JSON.getType());
+        header.setStatus(MsgStatusEnum.SUCCESS.getCode());
         RpcRequest rpcRequest = RpcRequest.builder().
                 interfaceName(method.getDeclaringClass().getName())
                 .methodName(method.getName())
                 .paraClass(method.getParameterTypes())
                 .para(args).build();
-        return rpcClient.sendRequest(rpcRequest).getData();
+        rpcProtocol.setHeader(header);
+        rpcProtocol.setBody(rpcRequest);
+        return rpcClient.sendRequest(rpcProtocol).getData();
     }
 }

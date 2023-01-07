@@ -8,4 +8,9 @@ public interface HelloService {
      * @return
      */
     String hello(String name);
+
+    String hello();
+    String hello(int a);
+
+    String hello(HelloPara helloPara);
 }

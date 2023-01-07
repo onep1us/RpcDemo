@@ -1,7 +1,12 @@
 import client.discovery.NacosServiceDiscovery;
+import client.net.NettyClient;
 import client.net.ProxyFactory;
+import client.net.RpcClient;
 import client.net.SocketClient;
+import model.RpcRequest;
+import model.RpcResponse;
 import protocol.ProtocolConstants;
+import serialization.JsonSerialization;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -10,26 +15,19 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
     public static void main(String[] args) {
         try {
-//            ProxyFactory proxyFactory = new ProxyFactory(new SocketClient(new NacosServiceDiscovery("123.60.148.100:8848")));
-//            HelloService helloService = proxyFactory.getProxy(HelloService.class);
-//            System.out.println(helloService.hello("wanjiahao"));
-            System.out.println(ProtocolConstants.MAGIC);
-            byte[] bytes = new byte[10];
-            bytes[0] = 0;
-            bytes[1] = 16;
-            bytes[2] = 1;
-            bytes[3] = 1;
-            bytes[4] = 1;
-            bytes[8] = 1;
-            bytes[9] = 1;
-            Socket socket = new Socket();
-            socket.connect(new InetSocketAddress("192.168.13.1",8000),5000);
-            OutputStream outputStream = socket.getOutputStream();
-            outputStream.write(bytes);
+            RpcClient nettyClient = new NettyClient(new NacosServiceDiscovery("123.60.148.100:8848"));
+            ProxyFactory proxyFactory = new ProxyFactory(nettyClient);
+            HelloService helloService = proxyFactory.getProxy(HelloService.class);
+            HelloPara helloPara = new HelloPara();
+            helloPara.setA(1);
+            helloPara.setC(1.0);
+            helloPara.setB(1);
+            System.out.println(helloService.hello(helloPara));
         } catch (Exception e) {
             e.printStackTrace();
         }

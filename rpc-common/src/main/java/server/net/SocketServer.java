@@ -1,7 +1,7 @@
 package server.net;
 
-import common.model.RpcRequest;
-import common.model.RpcResponse;
+import model.RpcRequest;
+import model.RpcResponse;
 import lombok.extern.slf4j.Slf4j;
 import server.register.RpcRegister;
 

@@ -1,22 +1,20 @@
 package client.net;
 
 import client.discovery.RpcDiscovery;
-import common.model.RpcRequest;
-import common.model.RpcResponse;
+import model.RpcRequest;
+import model.RpcResponse;
+import protocol.RpcProtocol;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author wanjiahao
  */
 public class SocketClient implements RpcClient{
 
-    Map<String,Socket> cache = new ConcurrentHashMap<>();
     RpcDiscovery rpcDiscovery;
 
     public SocketClient(RpcDiscovery rpcDiscovery) {
@@ -24,8 +22,9 @@ public class SocketClient implements RpcClient{
     }
 
     @Override
-    public RpcResponse sendRequest(RpcRequest rpcRequest) {
+    public RpcResponse sendRequest(RpcProtocol<RpcRequest> rpcProtocol) {
         try {
+            RpcRequest rpcRequest = rpcProtocol.getBody();
             InetSocketAddress inetSocketAddress = rpcDiscovery.lookupService(rpcRequest.getInterfaceName());
             Socket socket = new Socket();
             socket.connect(new InetSocketAddress(inetSocketAddress.getHostString(), inetSocketAddress.getPort()));

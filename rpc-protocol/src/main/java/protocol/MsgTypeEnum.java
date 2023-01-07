@@ -2,9 +2,22 @@ package protocol;
 
 import lombok.Getter;
 
+/**
+ * @author wanjiahao
+ */
+
 public enum MsgTypeEnum {
+    /**
+     * 请求消息
+     */
     REQUEST(1),
+    /**
+     * 回复消息
+     */
     RESPONSE(2),
+    /**
+     * 心跳消息
+     */
     HEARTBEAT(3);
 
     @Getter

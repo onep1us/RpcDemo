@@ -1,7 +1,9 @@
-package common.model;
+package model;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
@@ -10,21 +12,23 @@ import java.io.Serializable;
  */
 @Builder
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class RpcRequest implements Serializable {
     /**
      * 接口名
      */
-    String interfaceName;
+    private String interfaceName;
     /**
      * 方法名
      */
-    String methodName;
+    private String methodName;
     /**
      * 方法参数
      */
-    Object[] para;
+    private Object[] para;
     /**
      * 方法参数类型
      */
-    Class<?>[] paraClass;
+    private Class<?>[] paraClass;
 }
