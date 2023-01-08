@@ -12,25 +12,35 @@ import java.nio.charset.StandardCharsets;
  */
 @Slf4j
 public class JsonSerialization implements CommonSerialization{
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
-
-
 
     @Override
     public <T> byte[] serialize(T obj) throws IOException {
-        return obj instanceof String ? ((String) obj).getBytes() : MAPPER.writeValueAsString(obj).getBytes(StandardCharsets.UTF_8);
+        try{
+            byte[] bytes = obj instanceof String ? ((String) obj).getBytes() : MAPPER.writeValueAsString(obj).getBytes(StandardCharsets.UTF_8);
+            return bytes;
+        }catch (Exception e){
+            log.error("JsonSerialization serialize error, obj :{}",obj,e);
+            return null;
+        }
     }
 
     @Override
     public <T> T deserialize(byte[] data, Class<T> clz) throws IOException {
-        T obj = MAPPER.readValue(new String(data), clz);
-        if (obj instanceof RpcRequest) {
-            obj = handleRequest(obj);
+        try {
+            T obj = MAPPER.readValue(new String(data), clz);
+            if (obj instanceof RpcRequest) {
+                obj = (T) handleRequest(obj);
+            }
+            return obj;
+        }catch (Exception e){
+            log.error("JsonSerialization deserialize error",e);
+            return null;
         }
-        return obj;
     }
 
-    private <T> T handleRequest(Object obj) throws IOException {
+    private RpcRequest handleRequest(Object obj) throws IOException {
         RpcRequest rpcRequest = (RpcRequest) obj;
         for (int i = 0; i < rpcRequest.getParaClass().length; i++) {
             Class<?> clazz = rpcRequest.getParaClass()[i];
@@ -40,6 +50,11 @@ public class JsonSerialization implements CommonSerialization{
                 rpcRequest.getPara()[i] = MAPPER.readValue(bytes, clazz);
             }
         }
-        return (T)rpcRequest;
+        return rpcRequest;
+    }
+
+    @Override
+    public int getCode() {
+        return SerializationTypeEnum.JSON.getType();
     }
 }

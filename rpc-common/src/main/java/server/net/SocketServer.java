@@ -1,5 +1,7 @@
 package server.net;
 
+import enums.RpcErrorEnum;
+import exception.RpcException;
 import model.RpcRequest;
 import model.RpcResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -61,8 +63,8 @@ public class SocketServer implements RpcServer{
     public void register(Object service) {
         Class<?>[] interfaces = service.getClass().getInterfaces();
         if(interfaces.length == 0){
-            //todo 抛出异常
-            return;
+            log.error("server register service error, The service {} does not implement the interface ",service.getClass().getCanonicalName());
+            throw new RpcException(RpcErrorEnum.NOT_IMPLEMENT_INTERFACE,"service name :" + service.getClass().getCanonicalName());
         }
         for (Class<?> anInterface : interfaces) {
             serviceMap.put(anInterface.getCanonicalName(), service);

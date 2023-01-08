@@ -3,6 +3,7 @@ package client.net;
 import client.discovery.RpcDiscovery;
 import codec.RpcDecoder;
 import codec.RpcEncoder;
+import exception.RegistryException;
 import model.RpcRequest;
 import model.RpcResponse;
 import handler.RpcResponseHandler;
@@ -45,21 +46,20 @@ public class NettyClient implements RpcClient{
     }
     @Override
     public RpcResponse sendRequest(RpcProtocol<RpcRequest> rpcProtocol) {
-        RpcRequest rpcRequest = rpcProtocol.getBody();
-        InetSocketAddress inetSocketAddress = rpcDiscovery.lookupService(rpcRequest.getInterfaceName());
-        if(null == inetSocketAddress){
-            //todo 抛出异常，未找到服务
-            return null;
-        }
         try {
+            log.info("sendRequest rpcProtocol :{}",rpcProtocol);
+            RpcRequest rpcRequest = rpcProtocol.getBody();
+            InetSocketAddress inetSocketAddress = rpcDiscovery.lookupService(rpcRequest.getInterfaceName());
+            if(null == inetSocketAddress){
+                return null;
+            }
             ChannelFuture channelFuture = bootstrap.connect(inetSocketAddress.getAddress(), inetSocketAddress.getPort()).sync();
             channelFuture.channel().writeAndFlush(rpcProtocol);
             channelFuture.channel().closeFuture().sync();
             AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse");
             return channelFuture.channel().attr(key).get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            //todo 抛出异常，连接失败
+        } catch (Exception e) {
+            log.error("sendRequest error,rpcProtocol:{}",rpcProtocol,e);
             return null;
         }
     }

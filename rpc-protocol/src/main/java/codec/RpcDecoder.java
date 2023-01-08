@@ -1,5 +1,9 @@
 package codec;
 
+import enums.RpcErrorEnum;
+import enums.SerializeExceptionEnum;
+import exception.RpcException;
+import exception.SerializeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -12,6 +16,7 @@ import protocol.ProtocolConstants;
 import protocol.RpcProtocol;
 import serialization.CommonSerialization;
 import serialization.SerializationFactory;
+import serialization.SerializationTypeEnum;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,8 +46,8 @@ public class RpcDecoder extends ByteToMessageDecoder {
         in.readBytes(data);
         MsgTypeEnum msgTypeEnum = MsgTypeEnum.findByType(msgType);
         if(null == msgTypeEnum){
-            //todo 写一个异常类
-            return;
+            log.error("msgType not found");
+            throw new RpcException(RpcErrorEnum.MESSAGE_TYPE_NOT_FOUND);
         }
         MsgHeader header = new MsgHeader();
         header.setMagic(magic);
@@ -50,10 +55,6 @@ public class RpcDecoder extends ByteToMessageDecoder {
         header.setMsgType(msgType);
         header.setStatus(status);
         CommonSerialization serialization = SerializationFactory.getSerialization(serializationType);
-        if(null == serialization){
-            //todo 写一个异常类，未找到序列化器
-            return;
-        }
         switch (msgTypeEnum){
             case REQUEST:
 

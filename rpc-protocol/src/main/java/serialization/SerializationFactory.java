@@ -8,13 +8,12 @@ public class SerializationFactory {
     public static CommonSerialization getSerialization(byte serializationType){
         SerializationTypeEnum serializationTypeEnum = SerializationTypeEnum.findByType(serializationType);
         switch (serializationTypeEnum){
-            case JSON:
-                return new JsonSerialization();
             case KRYO:
-                return null;
+                return new KryoSerialization();
+            case JSON:
             default:
                 //todo 抛出异常
-                return null;
+                return new JsonSerialization();
         }
     }
 }

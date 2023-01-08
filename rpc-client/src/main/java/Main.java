@@ -27,7 +27,7 @@ public class Main {
             helloPara.setA(1);
             helloPara.setC(1.0);
             helloPara.setB(1);
-            System.out.println(helloService.hello(helloPara));
+            System.out.println(helloService.hello("helloPara"));
         } catch (Exception e) {
             e.printStackTrace();
         }

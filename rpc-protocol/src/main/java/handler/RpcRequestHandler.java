@@ -1,5 +1,7 @@
 package handler;
 
+import enums.RpcErrorEnum;
+import exception.RpcException;
 import lombok.extern.slf4j.Slf4j;
 import model.RpcRequest;
 import model.RpcResponse;
@@ -32,10 +34,8 @@ public class RpcRequestHandler extends SimpleChannelInboundHandler<RpcProtocol<R
         log.info("rpcRequest : {}", rpcRequest);
         if (header.getStatus() == MsgStatusEnum.SUCCESS.getCode()) {
             Object service = serviceMap.getOrDefault(rpcRequest.getInterfaceName(),null);
-            log.info("获取到了服务");
             if(null == service){
-                //todo 抛出异常
-                return;
+                throw new RpcException(RpcErrorEnum.SERVER_SERVICE_NOT_FOUND,"not found service :" +rpcRequest.getInterfaceName());
             }
             Method method = service.getClass().getMethod(rpcRequest.getMethodName(), rpcRequest.getParaClass());
             log.info("rpcRequest.getPara().getClass() :{}",rpcRequest.getPara().getClass());

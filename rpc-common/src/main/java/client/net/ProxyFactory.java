@@ -28,7 +28,7 @@ public class ProxyFactory implements InvocationHandler {
         MsgHeader header = new MsgHeader();
         header.setMagic(ProtocolConstants.MAGIC);
         header.setMsgType((byte)MsgTypeEnum.REQUEST.getType());
-        header.setSerialization(SerializationTypeEnum.JSON.getType());
+        header.setSerialization(SerializationTypeEnum.KRYO.getType());
         header.setStatus(MsgStatusEnum.SUCCESS.getCode());
         RpcRequest rpcRequest = RpcRequest.builder().
                 interfaceName(method.getDeclaringClass().getName())

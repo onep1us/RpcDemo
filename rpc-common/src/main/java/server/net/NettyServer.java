@@ -2,6 +2,8 @@ package server.net;
 
 import codec.RpcDecoder;
 import codec.RpcEncoder;
+import enums.RpcErrorEnum;
+import exception.RpcException;
 import handler.RpcRequestHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -11,50 +13,37 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import lombok.extern.slf4j.Slf4j;
 import server.register.RpcRegister;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author wanjiahao
  */
+@Slf4j
 public class NettyServer implements RpcServer{
 
     private final int port;
     private final String host;
     private final RpcRegister rpcRegister;
-    private final ExecutorService threadPool;
     Map<String,Object> serviceMap = new ConcurrentHashMap<>();
 
     public NettyServer(String host,int port, RpcRegister rpcRegister) {
         this.host = host;
         this.port = port;
         this.rpcRegister = rpcRegister;
-        int corePoolSize = 5;
-        int maximumPoolSize = 20;
-        long keepAliveTime = 60;
-        BlockingQueue<Runnable> workingQueue = new ArrayBlockingQueue<>(100);
-        ThreadFactory threadFactory = Executors.defaultThreadFactory();
-        threadPool = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.SECONDS, workingQueue, threadFactory);
     }
 
     @Override
     public void start() {
-        EventLoopGroup boss = new NioEventLoopGroup();
-        EventLoopGroup worker = new NioEventLoopGroup();
+        EventLoopGroup boss = null;
+        EventLoopGroup worker = null;
         try {
 
-            boss = new NioEventLoopGroup();
+            boss = new NioEventLoopGroup(1);
             worker = new NioEventLoopGroup();
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(boss, worker)
@@ -73,9 +62,14 @@ public class NettyServer implements RpcServer{
             ChannelFuture channelFuture = bootstrap.bind(host, port).sync();
             channelFuture.channel().closeFuture().sync();
         } catch (Exception e){
+            log.error("netty error",e);
         } finally{
-            boss.shutdownGracefully();
-            worker.shutdownGracefully();
+            if(null != boss) {
+                boss.shutdownGracefully();
+            }
+            if(null != worker) {
+                worker.shutdownGracefully();
+            }
         }
     }
 
@@ -85,11 +79,11 @@ public class NettyServer implements RpcServer{
     }
 
     @Override
-    public void register(Object service) {
+    public void register(Object service){
         Class<?>[] interfaces = service.getClass().getInterfaces();
         if(interfaces.length == 0){
-            //todo 抛出异常
-            return;
+            log.error("server register service error, The service {} does not implement the interface ",service.getClass().getCanonicalName());
+            throw new RpcException(RpcErrorEnum.NOT_IMPLEMENT_INTERFACE,"service name :" + service.getClass().getCanonicalName());
         }
         for (Class<?> anInterface : interfaces) {
             serviceMap.put(anInterface.getCanonicalName(), service);
