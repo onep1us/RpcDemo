@@ -1,6 +1,7 @@
 package client.discovery;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 /**
  * @author wanjiahao
@@ -11,5 +12,5 @@ public interface RpcDiscovery {
      * @param serviceName
      * @return
      */
-    InetSocketAddress lookupService(String serviceName);
+    List<InetSocketAddress> lookupService(String serviceName);
 }

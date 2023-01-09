@@ -1,6 +1,7 @@
 package client.discovery;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -9,10 +10,10 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  */
 public class DefaultDiscovery implements RpcDiscovery{
-    Map<String,InetSocketAddress> serviceMap = new ConcurrentHashMap<>();
+    Map<String,List<InetSocketAddress>> serviceMap = new ConcurrentHashMap<>();
 
     @Override
-    public InetSocketAddress lookupService(String serviceName) {
+    public List<InetSocketAddress> lookupService(String serviceName) {
         return serviceMap.getOrDefault(serviceName,null);
     }
 }

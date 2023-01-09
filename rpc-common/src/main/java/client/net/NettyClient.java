@@ -1,9 +1,11 @@
 package client.net;
 
 import client.discovery.RpcDiscovery;
+import client.loadBalance.LoadBalancer;
+import client.loadBalance.RandomLoadBalancer;
 import codec.RpcDecoder;
 import codec.RpcEncoder;
-import exception.RegistryException;
+import com.alibaba.nacos.common.utils.CollectionUtils;
 import model.RpcRequest;
 import model.RpcResponse;
 import handler.RpcResponseHandler;
@@ -19,20 +21,22 @@ import lombok.extern.slf4j.Slf4j;
 import protocol.RpcProtocol;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 /**
  * @author wanjiahao
  */
 @Slf4j
 public class NettyClient implements RpcClient{
-    RpcDiscovery rpcDiscovery;
+    private final RpcDiscovery rpcDiscovery;
     private final Bootstrap bootstrap;
-    private final EventLoopGroup eventLoopGroup;
+    private LoadBalancer loadBalancer;
 
     public NettyClient(RpcDiscovery rpcDiscovery) {
+        this.loadBalancer = new RandomLoadBalancer();
         this.rpcDiscovery = rpcDiscovery;
         bootstrap = new Bootstrap();
-        eventLoopGroup = new NioEventLoopGroup(4);
+        EventLoopGroup eventLoopGroup = new NioEventLoopGroup(4);
         bootstrap.group(eventLoopGroup).channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
@@ -44,15 +48,25 @@ public class NettyClient implements RpcClient{
                     }
                 });
     }
+
+    public NettyClient(RpcDiscovery rpcDiscovery,LoadBalancer loadBalancer) {
+        this(rpcDiscovery);
+        this.loadBalancer = loadBalancer;
+    }
+
     @Override
     public RpcResponse sendRequest(RpcProtocol<RpcRequest> rpcProtocol) {
         try {
             log.info("sendRequest rpcProtocol :{}",rpcProtocol);
             RpcRequest rpcRequest = rpcProtocol.getBody();
-            InetSocketAddress inetSocketAddress = rpcDiscovery.lookupService(rpcRequest.getInterfaceName());
-            if(null == inetSocketAddress){
+            List<InetSocketAddress> inetSocketAddressList = rpcDiscovery.lookupService(rpcRequest.getInterfaceName());
+            if(CollectionUtils.isEmpty(inetSocketAddressList)){
                 return null;
             }
+            //todo 本地缓存失效解决
+            //todo 写一个本地缓存缓存channel
+            //todo 异步返回结果
+            InetSocketAddress inetSocketAddress = loadBalancer.select(inetSocketAddressList,rpcRequest.getInterfaceName());
             ChannelFuture channelFuture = bootstrap.connect(inetSocketAddress.getAddress(), inetSocketAddress.getPort()).sync();
             channelFuture.channel().writeAndFlush(rpcProtocol);
             channelFuture.channel().closeFuture().sync();

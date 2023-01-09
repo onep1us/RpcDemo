@@ -1,5 +1,7 @@
 package client.discovery;
 
+import client.loadBalance.LoadBalancer;
+import client.loadBalance.RandomLoadBalancer;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingFactory;
 import com.alibaba.nacos.api.naming.NamingService;
@@ -12,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -20,9 +23,16 @@ import java.util.List;
 @Slf4j
 public class NacosServiceDiscovery extends DefaultDiscovery{
     private final NamingService namingService;
+    private final LoadBalancer loadBalancer;
 
     public NacosServiceDiscovery(String address) {
         this.namingService = createNamingService(address);
+        this.loadBalancer = new RandomLoadBalancer();
+    }
+
+    public NacosServiceDiscovery(String address, LoadBalancer loadBalancer) {
+        this.namingService = createNamingService(address);
+        this.loadBalancer = loadBalancer;
     }
 
     public static NamingService createNamingService(String address){
@@ -35,15 +45,15 @@ public class NacosServiceDiscovery extends DefaultDiscovery{
     }
 
     @Override
-    public InetSocketAddress lookupService(String serviceName) {
+    public List<InetSocketAddress> lookupService(String serviceName) {
         try {
             if(!serviceMap.containsKey(serviceName)){
                 List<Instance> allInstances = namingService.getAllInstances(serviceName);
                 if(CollectionUtils.isEmpty(allInstances)){
                     throw new RegistryException(RegistryErrorEnum.REGISTRY_SERVICE_NOT_FOUND,"service name:" + serviceName);
                 }
-                Instance instance = allInstances.get(0);
-                serviceMap.put(serviceName,new InetSocketAddress(instance.getIp(),instance.getPort()));
+                List<InetSocketAddress> inetSocketAddressList = allInstances.stream().map(instance -> new InetSocketAddress(instance.getIp(), instance.getPort())).collect(Collectors.toList());
+                serviceMap.put(serviceName,inetSocketAddressList);
             }
             return serviceMap.get(serviceName);
         } catch (NacosException e) {
