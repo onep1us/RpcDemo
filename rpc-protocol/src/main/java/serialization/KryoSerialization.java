@@ -25,6 +25,11 @@ public class KryoSerialization implements CommonSerialization {
         return kryo;
     });
 
+    private static volatile KryoSerialization kryoSerialization;
+
+    private KryoSerialization(){
+    }
+
     @Override
     public byte[] serialize(Object obj) {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -57,5 +62,16 @@ public class KryoSerialization implements CommonSerialization {
             log.error("反序列化时有错误发生:", e);
             throw new SerializeException("反序列化时有错误发生");
         }
+    }
+
+    public static CommonSerialization getInstance(){
+        if(null == kryoSerialization){
+            synchronized (JsonSerialization.class){
+                if(null == kryoSerialization){
+                    kryoSerialization = new KryoSerialization();
+                }
+            }
+        }
+        return kryoSerialization;
     }
 }

@@ -22,6 +22,10 @@ public enum RpcErrorEnum {
      * 没有找到消息类型
      */
     MESSAGE_TYPE_NOT_FOUND("没有找到消息类型"),
+    /**
+     * 建立连接失败
+     */
+    CONNECT_ERROR("建立连接失败")
     ;
     private String message;
 }

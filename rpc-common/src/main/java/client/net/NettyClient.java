@@ -6,6 +6,12 @@ import client.loadBalance.RandomLoadBalancer;
 import codec.RpcDecoder;
 import codec.RpcEncoder;
 import com.alibaba.nacos.common.utils.CollectionUtils;
+import common.ChannelHolder;
+import common.UnprocessedRequests;
+import enums.RpcErrorEnum;
+import exception.RpcException;
+import io.netty.channel.Channel;
+import lombok.SneakyThrows;
 import model.RpcRequest;
 import model.RpcResponse;
 import handler.RpcResponseHandler;
@@ -16,12 +22,13 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 import protocol.RpcProtocol;
 
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author wanjiahao
@@ -30,11 +37,15 @@ import java.util.List;
 public class NettyClient implements RpcClient{
     private final RpcDiscovery rpcDiscovery;
     private final Bootstrap bootstrap;
-    private LoadBalancer loadBalancer;
+    private final UnprocessedRequests unprocessedRequests;
+    private final ChannelHolder channelProvider;
+    private  LoadBalancer loadBalancer;
 
     public NettyClient(RpcDiscovery rpcDiscovery) {
+        this.unprocessedRequests = UnprocessedRequests.getInstance();
         this.loadBalancer = new RandomLoadBalancer();
         this.rpcDiscovery = rpcDiscovery;
+        channelProvider = new ChannelHolder();
         bootstrap = new Bootstrap();
         EventLoopGroup eventLoopGroup = new NioEventLoopGroup(4);
         bootstrap.group(eventLoopGroup).channel(NioSocketChannel.class)
@@ -55,7 +66,7 @@ public class NettyClient implements RpcClient{
     }
 
     @Override
-    public RpcResponse sendRequest(RpcProtocol<RpcRequest> rpcProtocol) {
+    public CompletableFuture<RpcResponse> sendRequest(RpcProtocol<RpcRequest> rpcProtocol) {
         try {
             log.info("sendRequest rpcProtocol :{}",rpcProtocol);
             RpcRequest rpcRequest = rpcProtocol.getBody();
@@ -64,17 +75,34 @@ public class NettyClient implements RpcClient{
                 return null;
             }
             //todo 本地缓存失效解决
-            //todo 写一个本地缓存缓存channel
-            //todo 异步返回结果
+            CompletableFuture<RpcResponse> resultFuture = new CompletableFuture<>();
+            unprocessedRequests.put(rpcProtocol.getHeader().getRequestId(), resultFuture);
             InetSocketAddress inetSocketAddress = loadBalancer.select(inetSocketAddressList,rpcRequest.getInterfaceName());
-            ChannelFuture channelFuture = bootstrap.connect(inetSocketAddress.getAddress(), inetSocketAddress.getPort()).sync();
-            channelFuture.channel().writeAndFlush(rpcProtocol);
-            channelFuture.channel().closeFuture().sync();
-            AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse");
-            return channelFuture.channel().attr(key).get();
+            Channel channel = getChannel(inetSocketAddress);
+            channel.writeAndFlush(rpcProtocol);
+            return resultFuture;
         } catch (Exception e) {
             log.error("sendRequest error,rpcProtocol:{}",rpcProtocol,e);
             return null;
         }
+    }
+
+    private Channel getChannel(InetSocketAddress inetSocketAddress){
+        Channel channel = channelProvider.get(inetSocketAddress);
+        if(null == channel){
+            channel = connect(inetSocketAddress);
+        }
+        return channel;
+    }
+
+    private Channel connect(InetSocketAddress inetSocketAddress){
+        ChannelFuture channelFuture;
+        try {
+            channelFuture = bootstrap.connect(inetSocketAddress.getAddress(), inetSocketAddress.getPort()).sync();
+        } catch (Exception e) {
+            log.error("connect error, inetSocketAddress :{}",inetSocketAddress);
+            throw new RpcException(RpcErrorEnum.CONNECT_ERROR);
+        }
+        return channelFuture.channel();
     }
 }

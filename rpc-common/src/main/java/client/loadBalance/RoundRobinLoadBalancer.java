@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RoundRobinLoadBalancer implements LoadBalancer{
 
     private final Map<String,AtomicInteger> map = new ConcurrentHashMap<>();
+
     @Override
     public InetSocketAddress select(List<InetSocketAddress> inetSocketAddressList, String serviceName) {
         if(!map.containsKey(serviceName)){

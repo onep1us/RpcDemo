@@ -33,6 +33,7 @@ public class RpcDecoder extends ByteToMessageDecoder {
         if(magic != ProtocolConstants.MAGIC){
             throw new IllegalArgumentException("wrong magic number : " + magic);
         }
+        long requestId = in.readLong();
         byte msgType = in.readByte();
         byte serializationType = in.readByte();
         byte status = in.readByte();
@@ -51,6 +52,7 @@ public class RpcDecoder extends ByteToMessageDecoder {
         }
         MsgHeader header = new MsgHeader();
         header.setMagic(magic);
+        header.setRequestId(requestId);
         header.setSerialization(serializationType);
         header.setMsgType(msgType);
         header.setStatus(status);

@@ -18,6 +18,7 @@ public class RpcEncoder extends MessageToByteEncoder<RpcProtocol<Object>> {
     protected void encode(ChannelHandlerContext ctx, RpcProtocol<Object> rpcProtocol, ByteBuf byteBuf) throws Exception {
         MsgHeader header = rpcProtocol.getHeader();
         byteBuf.writeShort(header.getMagic());
+        byteBuf.writeLong(header.getRequestId());
         byteBuf.writeByte(header.getMsgType());
         byteBuf.writeByte(header.getSerialization());
         byteBuf.writeByte(header.getStatus());

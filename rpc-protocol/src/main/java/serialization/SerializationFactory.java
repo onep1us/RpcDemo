@@ -9,11 +9,10 @@ public class SerializationFactory {
         SerializationTypeEnum serializationTypeEnum = SerializationTypeEnum.findByType(serializationType);
         switch (serializationTypeEnum){
             case KRYO:
-                return new KryoSerialization();
+                return KryoSerialization.getInstance();
             case JSON:
             default:
-                //todo 抛出异常
-                return new JsonSerialization();
+                return JsonSerialization.getInstance();
         }
     }
 }

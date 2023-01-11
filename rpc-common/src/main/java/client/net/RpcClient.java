@@ -4,6 +4,8 @@ import model.RpcRequest;
 import model.RpcResponse;
 import protocol.RpcProtocol;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * @author wanjiahao
  */
@@ -13,5 +15,5 @@ public interface RpcClient {
      * @param rpcRequest
      * @return RpcResponse
      */
-    RpcResponse sendRequest(RpcProtocol<RpcRequest> rpcRequest);
+    CompletableFuture<RpcResponse> sendRequest(RpcProtocol<RpcRequest> rpcRequest);
 }

@@ -12,6 +12,10 @@ public class MsgHeader {
      */
     private short magic;
     /**
+     * 请求id
+     */
+    private long requestId;
+    /**
      * 消息类型
      */
     private byte msgType;

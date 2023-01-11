@@ -21,19 +21,13 @@ import java.util.stream.Collectors;
  * @author wanjiahao
  */
 @Slf4j
-public class NacosServiceDiscovery extends DefaultDiscovery{
+public class NacosServiceDiscovery implements RpcDiscovery{
     private final NamingService namingService;
-    private final LoadBalancer loadBalancer;
 
     public NacosServiceDiscovery(String address) {
         this.namingService = createNamingService(address);
-        this.loadBalancer = new RandomLoadBalancer();
     }
 
-    public NacosServiceDiscovery(String address, LoadBalancer loadBalancer) {
-        this.namingService = createNamingService(address);
-        this.loadBalancer = loadBalancer;
-    }
 
     public static NamingService createNamingService(String address){
         try {
@@ -52,7 +46,10 @@ public class NacosServiceDiscovery extends DefaultDiscovery{
                 if(CollectionUtils.isEmpty(allInstances)){
                     throw new RegistryException(RegistryErrorEnum.REGISTRY_SERVICE_NOT_FOUND,"service name:" + serviceName);
                 }
-                List<InetSocketAddress> inetSocketAddressList = allInstances.stream().map(instance -> new InetSocketAddress(instance.getIp(), instance.getPort())).collect(Collectors.toList());
+                List<InetSocketAddress> inetSocketAddressList = allInstances
+                        .stream()
+                        .map(instance -> new InetSocketAddress(instance.getIp(), instance.getPort()))
+                        .collect(Collectors.toList());
                 serviceMap.put(serviceName,inetSocketAddressList);
             }
             return serviceMap.get(serviceName);

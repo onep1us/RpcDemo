@@ -15,6 +15,11 @@ public class JsonSerialization implements CommonSerialization{
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    private static volatile JsonSerialization jsonSerialization;
+
+    private JsonSerialization(){
+    }
+
     @Override
     public <T> byte[] serialize(T obj) throws IOException {
         try{
@@ -56,5 +61,16 @@ public class JsonSerialization implements CommonSerialization{
     @Override
     public int getCode() {
         return SerializationTypeEnum.JSON.getType();
+    }
+
+    public static CommonSerialization getInstance(){
+        if(null == jsonSerialization){
+            synchronized (JsonSerialization.class){
+                if(null == jsonSerialization){
+                    jsonSerialization = new JsonSerialization();
+                }
+            }
+        }
+        return jsonSerialization;
     }
 }

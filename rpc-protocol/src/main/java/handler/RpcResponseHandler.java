@@ -1,5 +1,6 @@
 package handler;
 
+import common.UnprocessedRequests;
 import model.RpcResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -13,15 +14,20 @@ import protocol.RpcProtocol;
  */
 @Slf4j
 public class RpcResponseHandler extends SimpleChannelInboundHandler<RpcProtocol<RpcResponse>> {
+
+    private final UnprocessedRequests unprocessedRequests;
+
+    public RpcResponseHandler() {
+        unprocessedRequests = UnprocessedRequests.getInstance();
+    }
+
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, RpcProtocol<RpcResponse> msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, RpcProtocol<RpcResponse> rpcProtocol) throws Exception {
         try {
-            log.info(String.format("client receive msg: %s", msg));
-            AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse");
-            ctx.channel().attr(key).set(msg.getBody());
-            ctx.channel().close();
+            log.info(String.format("client receive msg: %s", rpcProtocol));
+            unprocessedRequests.complete(rpcProtocol);
         } finally {
-            ReferenceCountUtil.release(msg);
+            ReferenceCountUtil.release(rpcProtocol);
         }
     }
 }
