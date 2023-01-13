@@ -74,11 +74,10 @@ public class NettyClient implements RpcClient{
             if(CollectionUtils.isEmpty(inetSocketAddressList)){
                 return null;
             }
-            //todo 本地缓存失效解决
             CompletableFuture<RpcResponse> resultFuture = new CompletableFuture<>();
             unprocessedRequests.put(rpcProtocol.getHeader().getRequestId(), resultFuture);
             InetSocketAddress inetSocketAddress = loadBalancer.select(inetSocketAddressList,rpcRequest.getInterfaceName());
-            Channel channel = getChannel(inetSocketAddress);
+            Channel channel = getChannel(rpcRequest.getInterfaceName(),inetSocketAddress);
             channel.writeAndFlush(rpcProtocol);
             return resultFuture;
         } catch (Exception e) {
@@ -87,19 +86,20 @@ public class NettyClient implements RpcClient{
         }
     }
 
-    private Channel getChannel(InetSocketAddress inetSocketAddress){
+    private Channel getChannel(String serviceName, InetSocketAddress inetSocketAddress){
         Channel channel = channelProvider.get(inetSocketAddress);
         if(null == channel){
-            channel = connect(inetSocketAddress);
+            channel = connect(serviceName, inetSocketAddress);
         }
         return channel;
     }
 
-    private Channel connect(InetSocketAddress inetSocketAddress){
+    private Channel connect(String serviceName,InetSocketAddress inetSocketAddress){
         ChannelFuture channelFuture;
         try {
             channelFuture = bootstrap.connect(inetSocketAddress.getAddress(), inetSocketAddress.getPort()).sync();
         } catch (Exception e) {
+            rpcDiscovery.removeCache(serviceName,inetSocketAddress);
             log.error("connect error, inetSocketAddress :{}",inetSocketAddress);
             throw new RpcException(RpcErrorEnum.CONNECT_ERROR);
         }

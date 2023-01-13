@@ -9,15 +9,19 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author wanjiahao
  */
 public class ProxyFactory implements InvocationHandler {
-    RpcClient rpcClient;
+    private final RpcClient rpcClient;
+    private final AtomicLong atomicLong;
 
     public ProxyFactory(RpcClient rpcClient){
         this.rpcClient = rpcClient;
+        this.atomicLong = new AtomicLong(0);
     }
 
     public <T> T getProxy(Class<T> clazz){
@@ -29,8 +33,7 @@ public class ProxyFactory implements InvocationHandler {
         RpcProtocol<RpcRequest> rpcProtocol = new RpcProtocol<>();
         MsgHeader header = new MsgHeader();
         header.setMagic(ProtocolConstants.MAGIC);
-        //todo 通过雪花算法生成id
-        header.setRequestId(1L);
+        header.setRequestId(atomicLong.getAndIncrement());
         header.setMsgType((byte)MsgTypeEnum.REQUEST.getType());
         header.setSerialization(SerializationTypeEnum.KRYO.getType());
         header.setStatus(MsgStatusEnum.SUCCESS.getCode());
