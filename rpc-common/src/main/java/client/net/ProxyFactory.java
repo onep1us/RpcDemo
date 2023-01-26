@@ -2,6 +2,7 @@ package client.net;
 
 import model.RpcRequest;
 import model.RpcResponse;
+import org.omg.CORBA.TIMEOUT;
 import protocol.*;
 import serialization.SerializationTypeEnum;
 
@@ -9,6 +10,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -45,7 +47,7 @@ public class ProxyFactory implements InvocationHandler {
         rpcProtocol.setHeader(header);
         rpcProtocol.setBody(rpcRequest);
         CompletableFuture<RpcResponse> rpcResponseCompletableFuture = rpcClient.sendRequest(rpcProtocol);
-        RpcResponse rpcResponse = rpcResponseCompletableFuture.get();
+        RpcResponse rpcResponse = rpcResponseCompletableFuture.get(5, TimeUnit.SECONDS);
         return rpcResponse.getData();
     }
 }

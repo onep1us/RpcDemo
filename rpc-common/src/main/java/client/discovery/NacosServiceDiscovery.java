@@ -50,6 +50,7 @@ public class NacosServiceDiscovery implements RpcDiscovery{
                 {
                     if (event instanceof NamingEvent)
                     {
+                        log.info("监听服务");
                         List<Instance> instances = ((NamingEvent) event).getInstances();
                         List<InetSocketAddress> inetSocketAddressList = new CopyOnWriteArrayList<>();
                         instances.forEach(instance -> inetSocketAddressList.add(new InetSocketAddress(instance.getIp(), instance.getPort())));

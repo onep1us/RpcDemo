@@ -9,7 +9,7 @@ import java.util.Random;
  */
 public class RandomLoadBalancer implements LoadBalancer{
     @Override
-    public InetSocketAddress select(List<InetSocketAddress> inetSocketAddressList,String serviceName) {
-        return inetSocketAddressList.get(new Random().nextInt(inetSocketAddressList.size()));
+    public InetSocketAddress select(List<InetSocketAddress> serviceAddresses,String serviceName) {
+        return serviceAddresses.get(new Random().nextInt(serviceAddresses.size()));
     }
 }

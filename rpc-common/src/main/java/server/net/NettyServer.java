@@ -2,6 +2,7 @@ package server.net;
 
 import codec.RpcDecoder;
 import codec.RpcEncoder;
+import common.util.ShutDownHook;
 import enums.RpcErrorEnum;
 import exception.RpcException;
 import handler.RpcRequestHandler;
@@ -60,6 +61,8 @@ public class NettyServer implements RpcServer{
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
             ChannelFuture channelFuture = bootstrap.bind(host, port).sync();
+
+            ShutDownHook.addClearAllHook(this);
             channelFuture.channel().closeFuture().sync();
         } catch (Exception e){
             log.error("netty error",e);
@@ -75,7 +78,10 @@ public class NettyServer implements RpcServer{
 
     @Override
     public void stop() {
-
+        log.info("关闭后将自动注销所有服务");
+        InetSocketAddress inetSocketAddress = new InetSocketAddress(host, port);
+        serviceMap.keySet()
+                .forEach((serviceName) -> rpcRegister.unRegister(serviceName,inetSocketAddress));
     }
 
     @Override

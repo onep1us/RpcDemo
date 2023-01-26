@@ -18,6 +18,7 @@ public enum MsgTypeEnum {
     /**
      * 心跳消息
      */
+    //todo 写心跳机制
     HEARTBEAT(3);
 
     @Getter

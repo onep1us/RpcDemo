@@ -1,6 +1,7 @@
 package client.net;
 
 import client.discovery.RpcDiscovery;
+import client.loadBalance.ConsistentHashLoadBalancer;
 import client.loadBalance.LoadBalancer;
 import client.loadBalance.RandomLoadBalancer;
 import codec.RpcDecoder;
@@ -43,7 +44,7 @@ public class NettyClient implements RpcClient{
 
     public NettyClient(RpcDiscovery rpcDiscovery) {
         this.unprocessedRequests = UnprocessedRequests.getInstance();
-        this.loadBalancer = new RandomLoadBalancer();
+        this.loadBalancer = new ConsistentHashLoadBalancer();
         this.rpcDiscovery = rpcDiscovery;
         channelProvider = new ChannelHolder();
         bootstrap = new Bootstrap();
