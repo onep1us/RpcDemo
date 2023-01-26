@@ -2,6 +2,8 @@ package handler;
 
 import enums.RpcErrorEnum;
 import exception.RpcException;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 import model.RpcRequest;
 import model.RpcResponse;
@@ -31,8 +33,7 @@ public class RpcRequestHandler extends SimpleChannelInboundHandler<RpcProtocol<R
     protected void channelRead0(ChannelHandlerContext ctx, RpcProtocol<RpcRequest> msg) throws Exception {
         MsgHeader header = msg.getHeader();
         RpcRequest rpcRequest = msg.getBody();
-        log.info("rpcRequest : {}", rpcRequest);
-        if (header.getStatus() == MsgStatusEnum.SUCCESS.getCode()) {
+        if (header.getStatus() == MsgStatusEnum.SUCCESS.getCode() && !header.isHeartTag()) {
             Object service = serviceMap.getOrDefault(rpcRequest.getInterfaceName(),null);
             if(null == service){
                 throw new RpcException(RpcErrorEnum.SERVER_SERVICE_NOT_FOUND,"not found service :" +rpcRequest.getInterfaceName());
@@ -48,7 +49,18 @@ public class RpcRequestHandler extends SimpleChannelInboundHandler<RpcProtocol<R
             rpcProtocol.setBody(rpcResponse);
             ctx.writeAndFlush(rpcProtocol);
         }
-
+    }
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            IdleState state = ((IdleStateEvent) evt).state();
+            if (state == IdleState.READER_IDLE) {
+                log.info("long time no heart message, disconnect ");
+                ctx.close();
+            }
+        } else {
+            super.userEventTriggered(ctx, evt);
+        }
     }
 }
 

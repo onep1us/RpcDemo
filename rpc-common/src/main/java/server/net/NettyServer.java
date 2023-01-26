@@ -14,12 +14,14 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 import server.register.RpcRegister;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author wanjiahao
@@ -53,6 +55,7 @@ public class NettyServer implements RpcServer{
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             socketChannel.pipeline()
+                                    .addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS))
                                     .addLast(new RpcDecoder())
                                     .addLast(new RpcEncoder())
                                     .addLast(new RpcRequestHandler(serviceMap));

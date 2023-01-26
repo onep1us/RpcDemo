@@ -1,9 +1,7 @@
 package codec;
 
 import enums.RpcErrorEnum;
-import enums.SerializeExceptionEnum;
 import exception.RpcException;
-import exception.SerializeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -16,9 +14,7 @@ import protocol.ProtocolConstants;
 import protocol.RpcProtocol;
 import serialization.CommonSerialization;
 import serialization.SerializationFactory;
-import serialization.SerializationTypeEnum;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -37,6 +33,7 @@ public class RpcDecoder extends ByteToMessageDecoder {
         byte msgType = in.readByte();
         byte serializationType = in.readByte();
         byte status = in.readByte();
+        boolean heartTag = in.readBoolean();
         int msgLen = in.readInt();
         if (in.readableBytes() < msgLen) {
             //没有接收完整
@@ -56,10 +53,10 @@ public class RpcDecoder extends ByteToMessageDecoder {
         header.setSerialization(serializationType);
         header.setMsgType(msgType);
         header.setStatus(status);
+        header.setHeartTag(heartTag);
         CommonSerialization serialization = SerializationFactory.getSerialization(serializationType);
         switch (msgTypeEnum){
             case REQUEST:
-
                 RpcRequest rpcRequest = serialization.deserialize(data, RpcRequest.class);
                 log.info("rpcRequest json: {}", rpcRequest);
                 if(null != rpcRequest){
@@ -78,10 +75,7 @@ public class RpcDecoder extends ByteToMessageDecoder {
                     out.add(rpcProtocol);
                 }
                 break;
-            case HEARTBEAT:
-                break;
             default:
-                return;
         }
     }
 }

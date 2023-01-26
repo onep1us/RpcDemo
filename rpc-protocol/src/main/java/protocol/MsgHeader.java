@@ -1,6 +1,7 @@
 package protocol;
 
 import lombok.Data;
+import lombok.Getter;
 
 /**
  * @author wanjiahao
@@ -31,4 +32,8 @@ public class MsgHeader {
      * 数据长度
      */
     private int msgLen;
+    /**
+     * 心跳包标志
+     */
+    private boolean heartTag;
 }

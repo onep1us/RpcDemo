@@ -14,12 +14,7 @@ public enum MsgTypeEnum {
     /**
      * 回复消息
      */
-    RESPONSE(2),
-    /**
-     * 心跳消息
-     */
-    //todo 写心跳机制
-    HEARTBEAT(3);
+    RESPONSE(2);
 
     @Getter
     private final int type;

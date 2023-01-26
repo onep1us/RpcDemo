@@ -1,7 +1,5 @@
 package codec;
 
-import enums.SerializeExceptionEnum;
-import exception.SerializeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -22,6 +20,7 @@ public class RpcEncoder extends MessageToByteEncoder<RpcProtocol<Object>> {
         byteBuf.writeByte(header.getMsgType());
         byteBuf.writeByte(header.getSerialization());
         byteBuf.writeByte(header.getStatus());
+        byteBuf.writeBoolean(header.isHeartTag());
         CommonSerialization rpcSerialization = SerializationFactory.getSerialization(header.getSerialization());
         byte[] data = rpcSerialization.serialize(rpcProtocol.getBody());
         byteBuf.writeInt(data.length);

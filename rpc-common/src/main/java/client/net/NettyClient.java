@@ -3,7 +3,6 @@ package client.net;
 import client.discovery.RpcDiscovery;
 import client.loadBalance.ConsistentHashLoadBalancer;
 import client.loadBalance.LoadBalancer;
-import client.loadBalance.RandomLoadBalancer;
 import codec.RpcDecoder;
 import codec.RpcEncoder;
 import com.alibaba.nacos.common.utils.CollectionUtils;
@@ -12,7 +11,8 @@ import common.UnprocessedRequests;
 import enums.RpcErrorEnum;
 import exception.RpcException;
 import io.netty.channel.Channel;
-import lombok.SneakyThrows;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.IdleStateHandler;
 import model.RpcRequest;
 import model.RpcResponse;
 import handler.RpcResponseHandler;
@@ -26,10 +26,10 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 import protocol.RpcProtocol;
 
-import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author wanjiahao
@@ -54,6 +54,7 @@ public class NettyClient implements RpcClient{
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         socketChannel.pipeline()
+                                .addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS))
                                 .addLast(new RpcEncoder())
                                 .addLast(new RpcDecoder())
                                 .addLast(new RpcResponseHandler());
