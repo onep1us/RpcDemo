@@ -1,3 +1,5 @@
+import api.HelloPara;
+import api.HelloService;
 import client.discovery.NacosServiceDiscovery;
 import client.net.NettyClient;
 import client.net.ProxyFactory;

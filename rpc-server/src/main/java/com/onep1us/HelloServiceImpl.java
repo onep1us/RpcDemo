@@ -1,7 +1,14 @@
+package com.onep1us;
+
+import annotation.RpcService;
+import api.HelloPara;
+import api.HelloService;
+
 /**
  * @author wanjiahao
  */
-public class HelloServiceImpl implements HelloService{
+@RpcService
+public class HelloServiceImpl implements HelloService {
     @Override
     public String hello(String name) {
         return "hello" + name;

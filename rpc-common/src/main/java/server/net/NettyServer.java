@@ -1,7 +1,10 @@
 package server.net;
 
+import annotation.RpcService;
+import annotation.RpcServiceScan;
 import codec.RpcDecoder;
 import codec.RpcEncoder;
+import common.util.ReflectUtil;
 import common.util.ShutDownHook;
 import enums.RpcErrorEnum;
 import exception.RpcException;
@@ -20,6 +23,7 @@ import server.register.RpcRegister;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -38,6 +42,7 @@ public class NettyServer implements RpcServer{
         this.host = host;
         this.port = port;
         this.rpcRegister = rpcRegister;
+        scanService();
     }
 
     @Override
@@ -95,8 +100,52 @@ public class NettyServer implements RpcServer{
             throw new RpcException(RpcErrorEnum.NOT_IMPLEMENT_INTERFACE,"service name :" + service.getClass().getCanonicalName());
         }
         for (Class<?> anInterface : interfaces) {
-            serviceMap.put(anInterface.getCanonicalName(), service);
-            rpcRegister.register(anInterface.getCanonicalName(), new InetSocketAddress(host, port));
+            serviceMap.put(anInterface.getSimpleName(), service);
+            rpcRegister.register(anInterface.getSimpleName(), new InetSocketAddress(host, port));
         }
     }
+
+    private void register(Object service, String serviceName) {
+        serviceMap.put(serviceName, service);
+        rpcRegister.register(serviceName, new InetSocketAddress(host, port));
+    }
+
+    private void scanService() {
+        String mainClassName = ReflectUtil.getStackTrace();
+        log.info("scanServices: {}",mainClassName);
+        Class<?> startClass;
+        try {
+            startClass = Class.forName(mainClassName);
+            if(!startClass.isAnnotationPresent(RpcServiceScan.class)) {
+                log.error("lose @ServiceScan");
+                throw new RpcException(RpcErrorEnum.UNKNOWN);
+            }
+        } catch (ClassNotFoundException e) {
+            throw new RpcException(RpcErrorEnum.UNKNOWN);
+        }
+        String basePackage = startClass.getAnnotation(RpcServiceScan.class).basePackage();
+        if("".equals(basePackage)) {
+            basePackage = mainClassName.substring(0, mainClassName.lastIndexOf("."));
+        }
+        Set<Class<?>> classSet = ReflectUtil.getClasses(basePackage);
+        for(Class<?> clazz : classSet) {
+            if(clazz.isAnnotationPresent(RpcService.class)) {
+                String serviceName = clazz.getAnnotation(RpcService.class).name();
+                Object obj;
+                try {
+                    obj = clazz.getDeclaredConstructor().newInstance();
+                } catch (Exception e) {
+                    log.error("创建 " + clazz + " 时有错误发生");
+                    continue;
+                }
+                if("".equals(serviceName)) {
+                    register(obj);
+                } else {
+                    register(obj, serviceName);
+                }
+            }
+        }
+    }
+
+
 }

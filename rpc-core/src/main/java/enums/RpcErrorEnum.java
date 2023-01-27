@@ -25,7 +25,11 @@ public enum RpcErrorEnum {
     /**
      * 建立连接失败
      */
-    CONNECT_ERROR("建立连接失败")
+    CONNECT_ERROR("建立连接失败"),
+    /**
+     * 未知
+     */
+    UNKNOWN("未知错误")
     ;
     private String message;
 }

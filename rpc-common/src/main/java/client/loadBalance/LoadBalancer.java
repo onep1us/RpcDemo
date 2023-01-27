@@ -14,6 +14,5 @@ public interface LoadBalancer {
      * @param serviceName
      * @return
      */
-    //todo 实现一致性哈希负载均衡
     InetSocketAddress select(List<InetSocketAddress> serviceAddresses, String serviceName);
 }
